@@ -315,8 +315,40 @@ jobs:
           name: "Run Tests"
           command: yarn test
 
+  update-react:
+    executor: node
+    parameters:
+      version:
+        type: string
+        default: "next"
+    steps:
+      - checkout
+      - <<: *restore_cache
+      - <<: *install_node_modules
+      - <<: *persist_cache
+      - <<: *attach_to_bootstrap
+      - run:
+          name: "Update React to prerelease"
+          command: "yarn upgrade react@{{version}} react-dom@{{version}}"
+
 workflows:
   version: 2
+  nightly-react-next:
+    # triggers:
+    #   - schedule:
+    #       cron: "0 2,6,10,14,18,22 * * *"
+    #       filters:
+    #         branches:
+    #           only:
+    #             - master
+    jobs:
+      - bootstrap
+      - update-react:
+          version: "next"
+      - e2e_tests_gatsby-image
+      - e2e_tests_development_runtime
+      - e2e_tests_production_runtime
+
   build-test:
     jobs:
       - windows_unit_tests
